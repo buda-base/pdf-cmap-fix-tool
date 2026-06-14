@@ -172,6 +172,17 @@ header {
 /* fonts list */
 .section-label { font-size:.74rem; text-transform:uppercase; letter-spacing:.16em; color: var(--ink-faint); font-weight:600; margin-bottom: 12px; }
 .chips { display:flex; flex-wrap:wrap; gap: 8px; }
+/* collapsible "fonts in this document" reveal — keeps the actions above the fold */
+.fonts-reveal { margin-top: 22px; }
+.fonts-reveal summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  font-size:.74rem; text-transform:uppercase; letter-spacing:.16em; color: var(--ink-faint); font-weight:600;
+}
+.fonts-reveal summary::-webkit-details-marker { display: none; }
+.fonts-reveal summary::before { content: '▸'; font-size:.8em; transition: transform .2s var(--ease); }
+.fonts-reveal[open] summary::before { transform: rotate(90deg); }
+.fonts-reveal summary:hover { color: var(--maroon); }
+.fonts-reveal .chips { margin-top: 14px; }
 .chip {
   font-size:.82rem; padding: 6px 12px; border-radius: 999px;
   background: var(--paper-deep); border:1px solid var(--line); color: var(--ink-soft);

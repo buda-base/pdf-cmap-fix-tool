@@ -141,7 +141,9 @@ const App = (() => {
   // ---- step 2: configure ---------------------------------------------------
   function renderConfig() {
     const a = state.analysis;
-    const fontChips = (a.fonts || []).map((f) => `<span class="chip">${esc(f)}</span>`).join('')
+    // Strip PDF subset prefixes (6 uppercase letters + "+") and de-duplicate.
+    const cleanFonts = [...new Set((a.fonts || []).map((f) => f.replace(/^[A-Z]{6}\+/, '')))];
+    const fontChips = cleanFonts.map((f) => `<span class="chip">${esc(f)}</span>`).join('')
       || '<span class="chip">No embedded fonts detected</span>';
 
     $('view-config').innerHTML = `
@@ -150,15 +152,10 @@ const App = (() => {
           <div class="doc-ico">PDF</div>
           <div class="doc-meta">
             <h3>${esc(state.filename)}</h3>
-            <div class="sub">${a.page_count} page${a.page_count === 1 ? '' : 's'} · ${(a.fonts || []).length} font${(a.fonts || []).length === 1 ? '' : 's'}</div>
+            <div class="sub">${a.page_count} page${a.page_count === 1 ? '' : 's'} · ${cleanFonts.length} font${cleanFonts.length === 1 ? '' : 's'}</div>
           </div>
           <button class="linkbtn" onclick="App.reset()">Change file</button>
         </div>
-
-        <div class="divline"></div>
-
-        <div class="section-label">Fonts in this document</div>
-        <div class="chips">${fontChips}</div>
 
         <div class="divline"></div>
 
@@ -188,6 +185,11 @@ const App = (() => {
             </div>
           </div>
         </div>
+
+        <details class="fonts-reveal">
+          <summary>${cleanFonts.length} font${cleanFonts.length === 1 ? '' : 's'} in this document</summary>
+          <div class="chips">${fontChips}</div>
+        </details>
 
         <div class="btn-actions">
           <button class="btn btn-primary" id="go">
