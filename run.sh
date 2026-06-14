@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tibetan PDF Doctor : start script.
+# Easy Tibetan Copy : start script.
 # Creates/uses a local virtualenv, installs deps once, then runs the server.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -22,5 +22,5 @@ if [ ! -f "$VENV/.deps-installed" ]; then
   touch "$VENV/.deps-installed"
 fi
 
-echo "→ Tibetan PDF Doctor running at http://$HOST:$PORT"
+echo "→ Easy Tibetan Copy running at http://$HOST:$PORT"
 exec uvicorn app.main:app --host "$HOST" --port "$PORT"

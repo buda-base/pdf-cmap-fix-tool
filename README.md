@@ -1,10 +1,12 @@
-# Tibetan PDF Doctor
+# Easy Tibetan Copy
+
+*Copy, paste and search Tibetan PDFs — at last.*
 
 A lightweight, modern web app around OpenPecha's
 [`pdf-cmap-fix`](https://github.com/OpenPecha/pdf-cmap-fix) CLI.
 
 Many Tibetan PDFs render perfectly on screen but copy/paste and extract as gibberish,
-because the embedded font's `/ToUnicode` character map is broken or missing. Tibetan PDF Doctor
+because the embedded font's `/ToUnicode` character map is broken or missing. Easy Tibetan Copy
 repairs that map so the text comes out correct — and can also extract clean text for you.
 
 ## What it does
