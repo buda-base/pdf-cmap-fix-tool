@@ -1,4 +1,4 @@
-/* Pecha — Tibetan PDF Fix : front-end state machine */
+/* Tibetan PDF Doctor : front-end state machine */
 const App = (() => {
   const views = ['upload', 'config', 'processing', 'result', 'error'];
   const $ = (id) => document.getElementById(id);
