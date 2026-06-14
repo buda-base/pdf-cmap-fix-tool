@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Runtime / uploads — nothing here should ever be committed
+uploads/
+tmp/
+*.patched.pdf
+*.raw.txt
+*.patched.txt
+*.diff.txt
+
+# Playwright / test artifacts
+.playwright-mcp/
+shot_*.jpeg
+shot_*.png
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

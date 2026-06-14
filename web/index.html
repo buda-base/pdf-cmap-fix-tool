@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pecha · Tibetan PDF Fix</title>
+  <meta name="description" content="Repair Tibetan PDFs so text copies, pastes and extracts cleanly — with optional legacy-font Unicode conversion." />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%BF%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M24 3c4 6 11 8 11 18 0 8-5 12-11 17-6-5-11-9-11-17C13 11 20 9 24 3Z" fill="currentColor" opacity=".14"/>
+          <path d="M24 6c3.2 5 9 6.6 9 15 0 6.6-4.2 10-9 14-4.8-4-9-7.4-9-14 0-8.4 5.8-10 9-15Z" stroke="currentColor" stroke-width="2"/>
+          <circle cx="24" cy="20" r="3.4" fill="currentColor"/>
+        </svg>
+        <div>
+          <b>Pecha</b>
+          <span>PDF Fix</span>
+        </div>
+      </div>
+      <div class="byline">
+        Wraps <a href="https://github.com/OpenPecha/pdf-cmap-fix" target="_blank" rel="noopener">OpenPecha · pdf-cmap-fix</a><br/>
+        Your file never leaves this server.
+      </div>
+    </header>
+
+    <section class="hero">
+      <span class="eyebrow reveal d1">Copy · Paste · Extract</span>
+      <h1 class="reveal d2">Make your Tibetan PDFs<br/><em>actually readable</em>.</h1>
+      <p class="reveal d3">Many Tibetan PDFs render beautifully yet copy as gibberish. Pecha repairs the
+        hidden character map so the text comes out right — and can extract clean text for you.</p>
+    </section>
+
+    <main class="stage">
+
+      <!-- STATE: upload -->
+      <section id="view-upload" class="view">
+        <div class="drop reveal d4" id="drop" tabindex="0" role="button" aria-label="Upload a PDF">
+          <div class="drop-ico">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/>
+            </svg>
+          </div>
+          <h3>Drop a PDF here</h3>
+          <p>or click to choose a file</p>
+          <span class="pill" id="limit-pill">PDF · up to 5 MB</span>
+          <input type="file" id="file" accept="application/pdf,.pdf" hidden />
+        </div>
+      </section>
+
+      <!-- STATE: configure -->
+      <section id="view-config" class="view" hidden></section>
+
+      <!-- STATE: processing -->
+      <section id="view-processing" class="view" hidden>
+        <div class="panel processing">
+          <div class="mandala"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="dot"></div></div>
+          <h3 id="proc-title">Working on it…</h3>
+          <p id="proc-sub">Repairing the character map.</p>
+          <div id="proc-queue" hidden></div>
+        </div>
+      </section>
+
+      <!-- STATE: result -->
+      <section id="view-result" class="view" hidden></section>
+
+      <!-- STATE: error -->
+      <section id="view-error" class="view" hidden>
+        <div class="panel err">
+          <div class="x">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </div>
+          <h3 id="err-title">Something went wrong</h3>
+          <p id="err-msg"></p>
+          <div class="btn-actions" style="justify-content:center">
+            <button class="btn btn-ghost" onclick="App.reset()">Start over</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      Files are processed one at a time and held only in memory — deleted right after you download.<br/>
+      Legacy-font conversion uses <a href="https://github.com/buda-base/py-tiblegenc" target="_blank" rel="noopener">BDRC · py-tiblegenc</a>.
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
