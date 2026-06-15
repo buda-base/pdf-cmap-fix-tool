@@ -41,7 +41,7 @@ const App = (() => {
 
   function engine() {
     if (worker) return worker;
-    worker = new Worker('worker.js');
+    worker = new Worker('worker.js?v=2');
     worker.onmessage = (e) => {
       const m = e.data;
       if (m.type === 'progress') { onPhase(m.phase); return; }
@@ -254,8 +254,8 @@ const App = (() => {
         <div class="stats">${statCards}</div>
         <div class="btn-actions" style="flex-wrap:wrap">
           <button class="btn btn-primary" id="dl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg> Download fixed PDF</button>
-          <button class="btn btn-ghost" id="to-extract"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Extract text</button>
-          <button class="btn btn-ghost" onclick="App.reset()" style="margin-left:auto">Do another</button>
+          <button class="btn btn-accent" id="to-extract"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Extract text</button>
+          <button class="btn btn-quiet" onclick="App.reset()" style="margin-left:auto">Do another</button>
         </div>
       </div>`;
     $('dl').addEventListener('click', () => {
@@ -268,23 +268,19 @@ const App = (() => {
 
   function renderBlocks(blocks) {
     if (!blocks || !blocks.length) return '';
-    // Normalise PDF point-sizes to readable on-screen px: map the dominant size
-    // (the one carrying the most text — i.e. the body) to ~18px, keeping relative
-    // proportions so headings stay bigger. Absolute PDF sizes are often huge.
-    const charsBySize = {};
-    for (const b of blocks) for (const ln of b.lines) for (const r of ln) {
-      if (r.s) charsBySize[r.s] = (charsBySize[r.s] || 0) + (r.t ? r.t.length : 0);
-    }
-    let body = 0, best = -1;
-    for (const s in charsBySize) if (charsBySize[s] > best) { best = charsBySize[s]; body = parseFloat(s); }
-    const scale = body ? 18 / body : 1;
-    const px = (s) => Math.max(12, Math.min(40, s * scale));
+    // Fixed, script-aware sizing — stable whatever the page selection. Tibetan
+    // reads smaller per-px than Latin, so it gets a larger scale; Latin/mixed is
+    // kept modest so title-heavy pages don't blow up.
+    const px = (s, tib) => tib
+      ? Math.max(16, Math.min(34, s * 0.85))
+      : Math.max(12, Math.min(28, s * 0.9));
 
     return blocks.map((b) => {
       const lines = (b.lines || []).map((line) => {
         const spans = line.map((run) => {
+          const tib = run.tib != null ? run.tib : /[ༀ-࿿]/.test(run.t || '');
           const st = [];
-          if (run.s) st.push(`font-size:${px(run.s).toFixed(1)}px`);
+          if (run.s) st.push(`font-size:${px(run.s, tib).toFixed(1)}px`);
           if (run.b) st.push('font-weight:700');
           if (run.i) st.push('font-style:italic');
           return `<span style="${st.join(';')}">${esc(run.t)}</span>`;
@@ -310,11 +306,11 @@ const App = (() => {
         </div>
         <div class="textbox rich" id="textbox">${rich || '<span style="color:var(--ink-faint)">No extractable text on the selected pages.</span>'}</div>
         <div class="btn-actions" style="flex-wrap:wrap">
-          <button class="btn btn-ghost" id="copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>
+          <button class="btn btn-primary" id="copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>
           <button class="btn btn-ghost" id="save"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg> .txt</button>
           <button class="btn btn-ghost" id="save-docx"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> .docx</button>
-          <button class="btn btn-ghost" id="to-fix" style="margin-left:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg> Fix the PDF</button>
-          <button class="btn btn-ghost" onclick="App.reset()">Do another</button>
+          <button class="btn btn-accent" id="to-fix"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg> Fix the PDF</button>
+          <button class="btn btn-quiet" onclick="App.reset()" style="margin-left:auto">Do another</button>
         </div>
       </div>`;
     $('copy').addEventListener('click', async () => {

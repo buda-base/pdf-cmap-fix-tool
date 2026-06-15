@@ -76,7 +76,8 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 
-CS_FONT = "Jomolhari"   # Unicode Tibetan font for the .docx complex-script slot
+TIB_FONT = "Jomolhari"        # Unicode Tibetan font for Tibetan runs
+LATIN_FONT = "Times New Roman" # everything else
 
 def _attrs(span):
     flags = span.get("flags", 0) or 0
@@ -86,14 +87,20 @@ def _attrs(span):
     size = round(float(span.get("size") or 0), 1)
     return bold, italic, size
 
-def _set_cs(run, name):
-    # Word renders Tibetan via the complex-script (w:cs) font slot.
+def _is_tibetan(s):
+    return any(0x0F00 <= ord(c) <= 0x0FFF for c in s)
+
+def _set_font(run, name):
+    # Set every font slot (ascii/hAnsi + complex-script cs) so Word uses this
+    # font whichever way it classifies the characters.
+    run.font.name = name
     rpr = run._element.get_or_add_rPr()
     rfonts = rpr.find(qn('w:rFonts'))
     if rfonts is None:
         from docx.oxml import OxmlElement
         rfonts = OxmlElement('w:rFonts'); rpr.append(rfonts)
-    rfonts.set(qn('w:cs'), name)
+    for a in ('w:ascii', 'w:hAnsi', 'w:cs'):
+        rfonts.set(qn(a), name)
 
 pdf_cmap_fix.patch_pdf("/in.pdf", output_path="/patched.pdf", write_file=True)
 d = pymupdf.open("/patched.pdf")
@@ -103,6 +110,7 @@ if _PAGES == 'odd':   sel = [i for i in sel if i % 2 == 0]   # 1-based odd  -> i
 elif _PAGES == 'even': sel = [i for i in sel if i % 2 == 1]  # 1-based even -> indices 1,3,5...
 
 doc = Document()
+doc.styles['Normal'].font.name = LATIN_FONT   # avoid the Cambria default
 blocks_out = []
 plain = []
 for pi in sel:
@@ -120,11 +128,12 @@ for pi in sel:
                 if not t:
                     continue
                 b, it, sz = _attrs(span)
-                run_list.append({"t": t, "s": sz, "b": b, "i": it})
+                tib = _is_tibetan(t)
+                run_list.append({"t": t, "s": sz, "b": b, "i": it, "tib": tib})
                 r = para.add_run(t)
                 r.bold = b; r.italic = it
                 if sz: r.font.size = Pt(sz)
-                _set_cs(r, CS_FONT)
+                _set_font(r, TIB_FONT if tib else LATIN_FONT)
                 plain.append(t)
                 non_empty = True
             if li < len(lines) - 1:

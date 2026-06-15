@@ -231,6 +231,12 @@ header {
 .btn-primary:disabled { opacity:.5; cursor: default; transform:none; box-shadow:var(--shadow-sm); }
 .btn-ghost { background: var(--paper-deep); color: var(--ink); border:1px solid var(--line); }
 .btn-ghost:hover { background:#fff; box-shadow: var(--shadow-sm); }
+/* accent: the "switch mode" action (Extract text / Fix the PDF) — saffron tint */
+.btn-accent { background: linear-gradient(180deg,#f8ecd6,#f0dcbb); color: var(--maroon-deep); border:1px solid var(--saffron-soft); }
+.btn-accent:hover { background: linear-gradient(180deg,#fcf3e4,#f4e3c7); box-shadow: var(--shadow-sm); }
+/* quiet: the low-emphasis "start over" action (Do another) — outlined, transparent */
+.btn-quiet { background: transparent; color: var(--ink-faint); border:1px solid var(--line); }
+.btn-quiet:hover { color: var(--maroon); background: var(--paper-deep); border-color: var(--line-strong); }
 .btn-actions { display:flex; gap:12px; margin-top: 26px; }
 .btn-actions .btn-primary { width:auto; flex:1; }
 
