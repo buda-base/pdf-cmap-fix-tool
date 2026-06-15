@@ -100,15 +100,44 @@ const App = (() => {
   }
 
   // ---- step 1: read + analyze (locally) ------------------------------------
-  async function handleFile(file) {
-    if (file.type && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf'))
-      return toast('Please choose a PDF file.');
+  function fileKind(file) {
+    const n = (file.name || '').toLowerCase();
+    if (n.endsWith('.pdf') || file.type === 'application/pdf') return 'pdf';
+    if (n.endsWith('.docx')) return 'docx';
+    if (n.endsWith('.rtf') || file.type === 'application/rtf' || file.type === 'text/rtf') return 'rtf';
+    if (n.endsWith('.doc')) return 'doc';
+    return 'unknown';
+  }
 
-    state = { filename: file.name, mode: 'fix', pages: 'all' };
+  // The Word/RTF converter (tibetan-ansi-to-unicode) is a separate JS module,
+  // loaded on demand — it needs no Pyodide, so docx/rtf stay lightweight.
+  let _lib = null;
+  function loadLib() {
+    if (!_lib) _lib = import('./vendor/tibetan-ansi-to-unicode/index.js');
+    return _lib;
+  }
+
+  function prepProcessing() {
+    const m = document.querySelector('#view-processing .mandala'); if (m) m.style.display = '';
+    const a = document.querySelector('#view-processing .notice-actions'); if (a) a.remove();
+  }
+
+  async function handleFile(file) {
+    const kind = fileKind(file);
+    if (kind === 'doc') return noticeDoc();
+    if (kind === 'unknown') return toast('Please choose a PDF, Word (.docx) or RTF file.');
+
+    state = { filename: file.name, kind, mode: 'fix', pages: 'all' };
 
     const mb = file.size / 1048576;
     if (mb > WARN_MB && !file._confirmed) return renderSizeWarning(file, mb);
 
+    if (kind === 'pdf') return startPdf(file);
+    return convertDoc(file, kind);
+  }
+
+  async function startPdf(file) {
+    prepProcessing();
     $('proc-title').textContent = 'Reading your document…';
     $('proc-sub').textContent = 'Warming up the engine…';
     showView('processing');
@@ -118,6 +147,44 @@ const App = (() => {
       const a = await call('analyze', { bytes: buf }, [buf]);
       state.analysis = a;
       renderConfig();
+    } catch (err) { showError(err.message); }
+  }
+
+  // ---- Word/RTF: convert legacy Tibetan to Unicode, in place ---------------
+  function readLatin1(buf) {
+    const u = new Uint8Array(buf); let s = '';
+    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return s;
+  }
+  function latin1Bytes(s) {
+    const u = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 0xff;
+    return u;
+  }
+  function adaptBlocks(blocks) {
+    return (blocks || []).map((b) => ({
+      lines: [(b.runs || []).map((r) => ({ t: r.text, s: r.size, b: r.bold, i: r.italic }))],
+    }));
+  }
+  async function convertDoc(file, kind) {
+    prepProcessing();
+    $('proc-title').textContent = 'Converting to Unicode…';
+    $('proc-sub').textContent = 'Reading your document…';
+    showView('processing');
+    try {
+      const lib = await loadLib();
+      let outBytes, blocks, mime, ext;
+      if (kind === 'docx') {
+        const data = new Uint8Array(await file.arrayBuffer());
+        [outBytes, blocks] = await Promise.all([lib.convertDocxDocument(data), lib.docxToBlocks(data)]);
+        mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; ext = 'docx';
+      } else {
+        const rtf = readLatin1(await file.arrayBuffer());
+        outBytes = latin1Bytes(lib.convertRtfDocument(rtf));
+        blocks = lib.rtfToBlocks(rtf);
+        mime = 'application/rtf'; ext = 'rtf';
+      }
+      renderConvertResult({ outBytes, blocks, mime, ext });
     } catch (err) { showError(err.message); }
   }
 
@@ -136,6 +203,48 @@ const App = (() => {
     sub.after(actions);
     $('warn-cancel').onclick = () => reset();
     $('warn-go').onclick = () => { actions.remove(); file._confirmed = true; handleFile(file); };
+  }
+
+  function noticeDoc() {
+    prepProcessing();
+    const m = document.querySelector('#view-processing .mandala'); if (m) m.style.display = 'none';
+    $('proc-title').textContent = 'This is an old “.doc” file';
+    $('proc-sub').innerHTML = 'Easy Tibetan Copy handles modern <b>.docx</b> files. Open this <b>.doc</b> in a recent Microsoft Word, choose <b>File → Save As → Word Document (.docx)</b>, then drop the <b>.docx</b> here.';
+    const actions = document.createElement('div');
+    actions.className = 'btn-actions notice-actions';
+    actions.style.justifyContent = 'center'; actions.style.marginTop = '18px';
+    actions.innerHTML = '<button class="btn btn-quiet" id="notice-back">Choose another file</button>';
+    $('proc-sub').after(actions);
+    $('notice-back').onclick = () => reset();
+    showView('processing');
+  }
+
+  function renderConvertResult({ outBytes, blocks, mime, ext }) {
+    const rich = renderBlocks(adaptBlocks(blocks));
+    const text = (blocks || []).map((b) => (b.runs || []).map((r) => r.text).join('')).join('\n');
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    $('view-result').innerHTML = `
+      <div class="panel swap-enter">
+        <div class="result-head">
+          <div class="badge-ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg></div>
+          <div><h3>Converted to Unicode</h3><p>Your Tibetan is now real Unicode — copy, paste and search. All other formatting is kept.</p></div>
+        </div>
+        <div class="texttools"><span class="fmt">${words.toLocaleString()} words</span></div>
+        <div class="textbox rich" id="textbox">${rich || '<span style="color:var(--ink-faint)">No legacy Tibetan found to convert.</span>'}</div>
+        <div class="btn-actions" style="flex-wrap:wrap">
+          <button class="btn btn-primary" id="dl-doc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg> Download .${ext}</button>
+          <button class="btn btn-ghost" id="copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</button>
+          <button class="btn btn-ghost" id="save"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg> .txt</button>
+          <button class="btn btn-quiet" onclick="App.reset()" style="margin-left:auto">Do another</button>
+        </div>
+      </div>`;
+    $('dl-doc').addEventListener('click', () => { download(outBytes, baseName() + '.' + ext, mime); toast('Downloaded.'); });
+    $('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(text); toast('Copied to clipboard.'); }
+      catch (_) { toast('Could not copy automatically — select the text.'); }
+    });
+    $('save').addEventListener('click', () => download(text, baseName() + '.txt', 'text/plain;charset=utf-8'));
+    showView('result');
   }
 
   // ---- step 2: configure ---------------------------------------------------
@@ -218,6 +327,7 @@ const App = (() => {
   // Run an operation on the already-loaded file (the worker keeps /in.pdf in its
   // FS, so fix and extract can be chained without re-uploading or re-booting).
   async function process() {
+    prepProcessing();
     $('proc-title').textContent = state.mode === 'fix' ? 'Repairing your PDF…' : 'Extracting text…';
     $('proc-sub').textContent = 'Working on your document…';
     showView('processing');

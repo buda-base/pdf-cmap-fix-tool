@@ -145,6 +145,28 @@ get a warning but are not blocked.
 **Revisit if:** Pyodide bundles PyMuPDF 1.27.x (Markdown becomes portable again), or mobile
 support for large files becomes a hard requirement (would need a server fallback).
 
+## 2026-06-15 — Add Word/RTF conversion (vendored JS lib, in-place, RTF option A)
+**Chosen:** Make Easy Tibetan Copy handle `.docx`/`.rtf` too: route by file type, and convert
+legacy-Tibetan Word/RTF to Unicode **in place** using the vendored
+[`tibetan-ansi-to-unicode`](https://github.com/jerefrer/tibetan-ansi-to-unicode) JS module
+(lazy-imported; `jszip` from CDN via an import map). No Pyodide for Word/RTF — only the PDF
+path is heavy. An old binary `.doc` is detected by extension and the user is asked to re-save
+as `.docx`.
+**Alternatives:** parse→model→regenerate via a docx library (e.g. `docx`); route RTF through
+`OpenPecha/basic-rtf` (Python, robust) in Pyodide.
+**Why:** In-place conversion (touch only legacy-font runs, leave the rest byte-for-byte) is
+**higher fidelity** than regenerate (keeps tables, images, styles) — so a generation library
+would be worse here. The lib is the user's own, pure-JS/ESM, already proven on its own site,
+and lightweight. For RTF, the lib's linear scanner is conservative (only converts legacy-font
+runs), which bounds risk; the main real gap vs `basic-rtf` is `\binN` binary data (can
+desync the brace stack) plus generic `{\*\…}` ignorable destinations and `\uc` skip counts.
+**Trade-offs:** RTF edge cases (esp. `\bin`, exotic encodings) may convert wrong; `jszip` is a
+CDN dependency. Chose **Option A** (lib JS) over **B** (basic-rtf/Pyodide) to stay lightweight
+and iterate on real failures.
+**Revisit if:** Real BDRC RTFs break on the JS converter → switch RTF to `basic-rtf` in
+Pyodide (using its byte offsets for in-place edits), or upstream `\bin`/`\*`/`\uc` hardening
+into the lib.
+
 ## Uncertainties left for the user to confirm on return
 - ~~Legacy Tibetan conversion is experimental~~ — resolved: handled automatically by
   upstream `pdf-cmap-fix`, validated on a real PDF (see the 2026-06-14 decision above).

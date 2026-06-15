@@ -6,7 +6,10 @@
     <title>Easy Tibetan Copy — Copy, paste and search Tibetan PDFs</title>
     <meta
       name="description"
-      content="Copy, paste and search Tibetan PDFs — at last. Repairs the hidden character map so Tibetan text comes out right.">
+      content="Copy, paste and search Tibetan PDFs — at last. Also converts legacy Tibetan in Word (.docx) and RTF files to Unicode.">
+    <script type="importmap">
+      { "imports": { "jszip": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm" } }
+    </script>
     <link rel="stylesheet" href="styles.css?v=__BUILD__">
     <link
       rel="icon"
@@ -34,7 +37,8 @@
         <p class="reveal d3">
           Many Tibetan PDFs render beautifully yet copy as gibberish. Easy
           Tibetan Copy repairs the hidden character map so the text comes out
-          right — and can extract clean text for you.
+          right — and also converts legacy Tibetan in Word &amp; RTF files to
+          Unicode.
         </p>
       </section>
 
@@ -64,10 +68,10 @@
                 <path d="M4 20h16" />
               </svg>
             </div>
-            <h3>Drop a PDF here</h3>
+            <h3>Drop a PDF, Word or RTF file here</h3>
             <p>or click to choose a file</p>
-            <span class="pill" id="limit-pill">PDF · best under 20 MB</span>
-            <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+            <span class="pill" id="limit-pill">PDF · Word (.docx) · RTF</span>
+            <input type="file" id="file" accept="application/pdf,.pdf,.docx,.rtf,.doc" hidden>
           </div>
         </section>
 

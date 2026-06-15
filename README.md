@@ -2,15 +2,19 @@
 
 *Copy, paste and search Tibetan PDFs — at last.*
 
-A small, fast, **100% client-side** web app that repairs Tibetan PDFs so their text
-copies, pastes and searches correctly. The whole fix runs in your browser via
-[Pyodide](https://pyodide.org/) running OpenPecha's
-[`pdf-cmap-fix`](https://github.com/OpenPecha/pdf-cmap-fix) — **your file is never
-uploaded; it never leaves your device.** No server, hostable on GitHub Pages.
+A small, fast, **100% client-side** web app that makes Tibetan text usable again.
+Drop a **PDF**, **Word (`.docx`)** or **RTF** file and get correct Unicode out —
+**your file is never uploaded; it never leaves your device.** No server, hostable on
+GitHub Pages.
 
-Many Tibetan PDFs render perfectly on screen but copy/paste and extract as gibberish,
-because the embedded font's `/ToUnicode` character map is broken or missing. Easy
-Tibetan Copy repairs that map so the text comes out as correct Unicode.
+- **PDFs** are repaired in your browser via [Pyodide](https://pyodide.org/) running
+  OpenPecha's [`pdf-cmap-fix`](https://github.com/OpenPecha/pdf-cmap-fix): many Tibetan
+  PDFs render perfectly but copy/paste as gibberish because the embedded font's
+  `/ToUnicode` map is broken or missing — this fixes that map.
+- **Word / RTF** files that use a pre-Unicode (legacy) Tibetan font are converted to
+  Unicode **in place** — the whole document is kept, only the legacy Tibetan runs are
+  swapped — via the [`tibetan-ansi-to-unicode`](https://github.com/jerefrer/tibetan-ansi-to-unicode)
+  library (pure JS, no Pyodide).
 
 ## What it does
 
@@ -24,22 +28,33 @@ Tibetan Copy repairs that map so the text comes out as correct Unicode.
   is repaired first, so legacy fonts come out as correct Unicode. The on-screen preview and
   the **Word `.docx`** keep the original **font sizes, bold/italic and paragraph flow**;
   a plain **`.txt`** is also available.
+- **Convert Word / RTF** — drop a `.docx` or `.rtf` whose Tibetan is in a legacy font and
+  download the **same file** with the Tibetan converted to Unicode, all other formatting
+  preserved. An old binary `.doc` is detected and you're asked to re-save it as `.docx`
+  first.
 
 ## How it works
 
 ```
-web/index.html        UI
-web/app.js            state machine (upload → configure → process → result)
-web/worker.js         Web Worker: Pyodide + pdf-cmap-fix + python-docx
+web/index.html        UI (+ an import map for jszip)
+web/app.js            state machine — routes by file type (pdf / docx / rtf / doc)
+web/worker.js         Web Worker: Pyodide + pdf-cmap-fix + python-docx (PDF path)
 web/sw.js             service worker — caches Pyodide + the wheel for fast repeat loads
 web/wheels/           the pdf-cmap-fix wheel (built by scripts/build-wheel.sh; gitignored)
+web/vendor/tibetan-ansi-to-unicode/   vendored JS converter (Word/RTF path)
 ```
 
-The UI thread hands the PDF bytes to a **Web Worker** running Pyodide 0.29.4 (which
-bundles PyMuPDF 1.26.3 + fonttools); the worker `micropip`-installs the pure-python
-`pdf-cmap-fix` wheel and `python-docx`, fixes/extracts in memory, and hands the result
-bytes back for download. Nothing is sent over the network except the Pyodide runtime
-and the wheel (both cached by the service worker after the first visit).
+**PDF path:** the UI hands the PDF bytes to a **Web Worker** running Pyodide 0.29.4
+(which bundles PyMuPDF 1.26.3 + fonttools); the worker `micropip`-installs the
+pure-python `pdf-cmap-fix` wheel and `python-docx`, fixes/extracts in memory, and hands
+the result back for download.
+
+**Word / RTF path:** no Pyodide — the app lazy-imports the vendored
+`tibetan-ansi-to-unicode` module (which pulls `jszip` from a CDN via the import map),
+converts the document in place, and offers the converted file for download.
+
+Nothing is sent over the network except the Pyodide runtime, the wheel and jszip (all
+cached after the first visit).
 
 ## Run it locally
 
@@ -74,8 +89,9 @@ source.
 
 ## Credits & license
 
-Wraps [OpenPecha/pdf-cmap-fix](https://github.com/OpenPecha/pdf-cmap-fix) (MIT). This
-wrapper is under the repository's [`LICENSE`](LICENSE). The text preview and the exported
-`.docx` use the **Jomolhari** Tibetan font (SIL Open Font License), bundled at
-[`web/fonts/`](web/fonts/). See [`DECISIONS.md`](DECISIONS.md) and
-[`docs/superpowers/specs/`](docs/superpowers/specs/) for the reasoning behind the design.
+Wraps [OpenPecha/pdf-cmap-fix](https://github.com/OpenPecha/pdf-cmap-fix) (MIT) for PDFs
+and vendors [`tibetan-ansi-to-unicode`](https://github.com/jerefrer/tibetan-ansi-to-unicode)
+for the Word/RTF conversion. This wrapper is under the repository's [`LICENSE`](LICENSE).
+The text preview and the exported `.docx` use the **Jomolhari** Tibetan font (SIL Open Font
+License), bundled at [`web/fonts/`](web/fonts/). See [`DECISIONS.md`](DECISIONS.md) for the
+reasoning behind the design.
