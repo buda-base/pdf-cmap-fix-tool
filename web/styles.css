@@ -311,7 +311,7 @@ footer .feedback a { border-bottom: 1px solid rgba(138,43,34,.25); }
 .credit-logos img { height:30px; width:auto; opacity:.78; transition: opacity .2s var(--ease); }
 .credit-logos a:hover img { opacity:1; }
 .credit-logos img.kf { height:44px; }   /* KF is a tall vertical mark — a touch larger to balance */
-.credit p { max-width: 46em; margin:0 auto; line-height:1.55; }
+.credit p { max-width: 46em; margin:0 auto; line-height:1.55; text-wrap-style: balance; }
 
 /* ----------------------------------------------------------- motion */
 .reveal { opacity: 0; transform: translateY(14px); animation: reveal .7s var(--ease-out) forwards; }

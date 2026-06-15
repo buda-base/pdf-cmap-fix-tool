@@ -41,7 +41,7 @@ const App = (() => {
 
   function engine() {
     if (worker) return worker;
-    worker = new Worker('worker.js?v=2');
+    worker = new Worker('worker.js?v=__BUILD__');
     worker.onmessage = (e) => {
       const m = e.data;
       if (m.type === 'progress') { onPhase(m.phase); return; }
