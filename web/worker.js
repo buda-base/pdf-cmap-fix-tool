@@ -21,7 +21,7 @@ async function boot() {
     importScripts(PYODIDE + 'pyodide.js');
     py = await self.loadPyodide({ indexURL: PYODIDE });
     post('progress', { phase: 'loading-packages' });
-    await py.loadPackage(['PyMuPDF', 'fonttools', 'micropip', 'lxml', 'typing-extensions']);
+    await py.loadPackage(['PyMuPDF', 'fonttools', 'numpy', 'micropip', 'lxml', 'typing-extensions']);
     post('progress', { phase: 'installing' });
     await py.runPythonAsync(`
 import micropip

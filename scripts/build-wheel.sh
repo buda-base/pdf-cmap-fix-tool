@@ -6,9 +6,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Pinned, validated commit of pdf-cmap-fix (bundles the legacy tiblegenc tables).
-# 103977e = merge of PR #14: synthesize ToUnicode for legacy fonts with none
-# (Type1/CFF + symbolic subsets) — fixes "N fonts found, 0 fixed" PDFs.
-PIN=103977ebc50626819df2c4b6e9df61af1f07fa60
+# e67f309 = main with: synthesize ToUnicode for legacy fonts that ship none,
+# recover Gen_-prefixed Chogyal CFF subsets (MT<byte> glyph names), and
+# shape-based identification of obfuscated-name CFF faces (needs numpy, loaded
+# by the worker via loadPackage).
+PIN=e67f30986ba48c8215b4c45c5edd9cd7db29ad6e
 OUT=web/wheels
 
 mkdir -p "$OUT"
