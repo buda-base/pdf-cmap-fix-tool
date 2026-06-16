@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <clipPath id="sq"><rect x="20" y="20" width="560" height="560" rx="95"/></clipPath>
+    <linearGradient id="saf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8a35a"/>
+      <stop offset="1" stop-color="#c8642a"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#sq)">
+    <rect width="600" height="600" fill="url(#saf)"/>
+    <!-- avant : bloc .notdef — centré dans la moitié gauche (centre 160,300), hauteur extérieure 192 -->
+    <rect width="300" height="600" fill="#6e1f18"/>
+    <rect x="103" y="211" width="114" height="178" fill="none" stroke="#fbf3e8" stroke-width="14" opacity="0.45"/>
+    <!-- après : ག vectorisé — centré dans la moitié droite (centre 440,300), hauteur d'encre 192 (= tofu) -->
+    <path transform="translate(378.31 204) scale(0.35556 -0.35556)" fill="#fffdf8"
+      d="M334 -63V-531Q334 -536 330.5 -538.0Q327 -540 325 -540Q317 -540 317 -531V-413Q317 -398 314.0 -354.5Q311 -311 305.5 -257.5Q300 -204 292.5 -150.5Q285 -97 276 -63H213V-309Q213 -315 209 -315Q206 -315 205.0 -314.0Q204 -313 201 -310Q197 -306 185.0 -293.0Q173 -280 156.5 -266.0Q140 -252 119.0 -241.0Q98 -230 76 -230Q60 -230 51.5 -234.5Q43 -239 29 -239Q15 -239 9.0 -229.0Q3 -219 3 -211Q3 -200 10.5 -189.5Q18 -179 26 -176Q26 -148 30.0 -128.5Q34 -109 39.5 -96.5Q45 -84 49.5 -78.0Q54 -72 56 -70Q56 -66 49.5 -64.5Q43 -63 35 -63L26 -55V-24L50 0H334L344 -9V-52ZM201 -287Q198 -247 193.5 -207.0Q189 -167 183.0 -135.0Q177 -103 171.0 -83.0Q165 -63 159 -63H121Q110 -63 96.5 -72.5Q83 -82 72.0 -97.0Q61 -112 53.5 -131.0Q46 -150 46 -170Q51 -168 59.5 -167.5Q68 -167 76 -167Q101 -167 121.5 -181.5Q142 -196 157.5 -215.5Q173 -235 183.5 -255.0Q194 -275 201 -287Z"/>
+    <line x1="300" y1="20" x2="300" y2="580" stroke="#fbf3e8" stroke-width="3"/>
+  </g>
+</svg>

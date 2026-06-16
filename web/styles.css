@@ -80,9 +80,19 @@ header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 34px 0 8px;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand {
+  display: flex; align-items: center; gap: 12px;
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  -webkit-appearance: none;
+}
+.brand:hover .mark { transform: rotate(-3deg) scale(1.05); }
+.brand:hover b { color: var(--maroon); }
+.brand:focus-visible { outline: 2px solid var(--saffron); outline-offset: 4px; border-radius: 8px; }
 .mark {
-  width: 38px; height: 38px; flex: none; color: var(--maroon);
+  width: 42px; height: 42px; flex: none; color: var(--maroon);
+  position: relative; top: 1px;
+  border-radius: 9px; transition: transform .3s var(--ease);
   filter: drop-shadow(0 2px 4px rgba(138,43,34,.18));
 }
 .brand b {
@@ -262,6 +272,8 @@ header {
 .result-head { display:flex; align-items:center; gap:14px; margin-bottom: 6px; }
 .badge-ok { width:42px;height:42px;flex:none;border-radius:50%; display:grid;place-items:center; color:#fff;
   background: linear-gradient(180deg,#4a8b60,#3f7a52); box-shadow: var(--shadow-sm); animation: pop .5s var(--ease-out) both; }
+.badge-warn { width:42px;height:42px;flex:none;border-radius:50%; display:grid;place-items:center; color:#fff;
+  background: linear-gradient(180deg,#e8a35a,#c8642a); box-shadow: var(--shadow-sm); animation: pop .5s var(--ease-out) both; }
 @keyframes pop { 0%{transform:scale(.4);opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
 .result-head h3 { font-family:'Fraunces',serif; font-weight:450; font-size:1.5rem; }
 .result-head p { color: var(--ink-faint); font-size:.9rem; }
@@ -312,6 +324,10 @@ footer .feedback a { border-bottom: 1px solid rgba(138,43,34,.25); }
 .credit-logos a:hover img { opacity:1; }
 .credit-logos img.kf { height:44px; }   /* KF is a tall vertical mark — a touch larger to balance */
 .credit p { max-width: 46em; margin:0 auto; line-height:1.55; text-wrap-style: balance; }
+.oss { margin-top: 22px; }
+.oss a { display:inline-flex; align-items:center; gap:7px; color: var(--ink-faint); transition: color .2s var(--ease); }
+.oss a:hover { color: var(--maroon); }
+.oss svg { width:15px; height:15px; }
 
 /* ----------------------------------------------------------- motion */
 .reveal { opacity: 0; transform: translateY(14px); animation: reveal .7s var(--ease-out) forwards; }
