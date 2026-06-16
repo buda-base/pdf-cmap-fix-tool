@@ -71,13 +71,26 @@ async function extract(pages) {
   // model: blocks (paragraphs) -> lines -> runs {t,s,b,i}. The same model drives
   // the on-screen preview and a formatted .docx (Tibetan rendered with Jomolhari).
   const metaJson = await py.runPythonAsync(`
-import json, pymupdf, pdf_cmap_fix
+import json, re, pymupdf, pdf_cmap_fix
 from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 
 TIB_FONT = "Jomolhari"        # Unicode Tibetan font for Tibetan runs
 LATIN_FONT = "Times New Roman" # everything else
+
+# Legacy Tibetan fonts pack glyphs across the full single-byte range, so PyMuPDF
+# can hand back NUL/control chars that python-docx (lxml) refuses to serialize.
+# Strip everything XML 1.0 forbids, keeping tab / newline / carriage-return.
+_XML_BAD = re.compile('[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\ufffe\\uffff]')
+# Legacy fonts map their space glyph to a Control-Pictures symbol (U+2423 open
+# box "␣"), and the /ToUnicode carries it straight through. Turn the box
+# back into a real space and drop the other control-picture stand-ins.
+_CTRL_PICS = re.compile('[\\u2400-\\u2422\\u2424]')
+def _xml_clean(s):
+    s = _XML_BAD.sub('', s)
+    s = s.replace('\\u2423', ' ')
+    return _CTRL_PICS.sub('', s)
 
 def _attrs(span):
     flags = span.get("flags", 0) or 0
@@ -124,18 +137,27 @@ for pi in sel:
         for li, line in enumerate(lines):
             run_list = []
             for span in line.get("spans", []):
-                t = span.get("text", "")
+                t = _xml_clean(span.get("text", ""))
                 if not t:
                     continue
                 b, it, sz = _attrs(span)
                 tib = _is_tibetan(t)
-                run_list.append({"t": t, "s": sz, "b": b, "i": it, "tib": tib})
-                r = para.add_run(t)
-                r.bold = b; r.italic = it
-                if sz: r.font.size = Pt(sz)
-                _set_font(r, TIB_FONT if tib else LATIN_FONT)
+                # Coalesce adjacent spans that share a style into one run.
+                # Legacy Tibetan lines come back as dozens of single-glyph
+                # spans; one docx run (+ font element) per span is what makes a
+                # 265-page book take minutes to serialise in the browser.
+                if (run_list and run_list[-1]["b"] == b and run_list[-1]["i"] == it
+                        and run_list[-1]["s"] == sz and run_list[-1]["tib"] == tib):
+                    run_list[-1]["t"] += t
+                else:
+                    run_list.append({"t": t, "s": sz, "b": b, "i": it, "tib": tib})
                 plain.append(t)
                 non_empty = True
+            for m in run_list:
+                r = para.add_run(m["t"])
+                r.bold = m["b"]; r.italic = m["i"]
+                if m["s"]: r.font.size = Pt(m["s"])
+                _set_font(r, TIB_FONT if m["tib"] else LATIN_FONT)
             if li < len(lines) - 1:
                 para.add_run().add_break()
                 plain.append("\\n")
