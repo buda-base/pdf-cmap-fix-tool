@@ -227,24 +227,27 @@ header {
 /* ----------------------------------------------------------- buttons */
 .btn {
   font: inherit; font-weight: 600; font-size: 1rem; cursor: pointer;
-  border: none; border-radius: 14px; padding: 16px 26px;
+  border: none; border-radius: 12px; padding: 16px 26px;
   display: inline-flex; align-items: center; justify-content:center; gap: 10px;
   transition: transform .2s var(--ease), box-shadow .25s var(--ease), background .25s;
 }
+/* primary: flat "ink stamp" — solid maroon, no ledge, no gradient. Sits flat on
+   the paper at rest; lifts a touch with a warm maroon-tinted shadow on hover. */
 .btn-primary {
   color: #fff; width: 100%;
-  background: linear-gradient(180deg, var(--maroon), var(--maroon-deep));
-  box-shadow: 0 2px 0 #5a1812, var(--shadow-md);
+  background: var(--maroon);
+  box-shadow: 0 1px 3px -1px rgba(44,28,12,.15);
 }
-.btn-primary:hover { transform: translateY(-2px);
-  box-shadow: 0 2px 0 #5a1812, 0 12px 26px -10px rgba(138,43,34,.45), 0 4px 10px -4px rgba(44,28,12,.12); }
-.btn-primary:active { transform: translateY(1px); box-shadow: 0 1px 0 #5a1812, var(--shadow-sm); }
-.btn-primary:disabled { opacity:.5; cursor: default; transform:none; box-shadow:var(--shadow-sm); }
+.btn-primary:hover { background: var(--maroon-deep); transform: translateY(-1px);
+  box-shadow: 0 8px 18px -8px rgba(138,43,34,.45); }
+.btn-primary:active { background: var(--maroon-deep); transform: translateY(0);
+  box-shadow: 0 1px 3px -1px rgba(44,28,12,.18); }
+.btn-primary:disabled { opacity:.5; cursor: default; transform:none; box-shadow:none; }
 .btn-ghost { background: var(--paper-deep); color: var(--ink); border:1px solid var(--line); }
-.btn-ghost:hover { background:#fff; box-shadow: var(--shadow-sm); }
-/* accent: the "switch mode" action (Extract text / Fix the PDF) — saffron tint */
-.btn-accent { background: linear-gradient(180deg,#f8ecd6,#f0dcbb); color: var(--maroon-deep); border:1px solid var(--saffron-soft); }
-.btn-accent:hover { background: linear-gradient(180deg,#fcf3e4,#f4e3c7); box-shadow: var(--shadow-sm); }
+.btn-ghost:hover { background:#fff; box-shadow: 0 4px 12px -6px rgba(44,28,12,.22); }
+/* accent: the "switch mode" action (Extract text / Fix the PDF) — flat saffron tint */
+.btn-accent { background: #f5e7ce; color: var(--maroon-deep); border:1px solid var(--saffron-soft); }
+.btn-accent:hover { background: #efddbb; box-shadow: 0 6px 14px -7px rgba(200,100,42,.38); }
 /* quiet: the low-emphasis "start over" action (Do another) — outlined, transparent */
 .btn-quiet { background: transparent; color: var(--ink-faint); border:1px solid var(--line); }
 .btn-quiet:hover { color: var(--maroon); background: var(--paper-deep); border-color: var(--line-strong); }
