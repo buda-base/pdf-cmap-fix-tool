@@ -236,7 +236,8 @@ header {
   background: linear-gradient(180deg, var(--maroon), var(--maroon-deep));
   box-shadow: 0 2px 0 #5a1812, var(--shadow-md);
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 0 #5a1812, var(--shadow-lg); }
+.btn-primary:hover { transform: translateY(-2px);
+  box-shadow: 0 2px 0 #5a1812, 0 12px 26px -10px rgba(138,43,34,.45), 0 4px 10px -4px rgba(44,28,12,.12); }
 .btn-primary:active { transform: translateY(1px); box-shadow: 0 1px 0 #5a1812, var(--shadow-sm); }
 .btn-primary:disabled { opacity:.5; cursor: default; transform:none; box-shadow:var(--shadow-sm); }
 .btn-ghost { background: var(--paper-deep); color: var(--ink); border:1px solid var(--line); }
