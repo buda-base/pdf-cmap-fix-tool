@@ -146,6 +146,9 @@ const App = (() => {
       // Transfer the buffer to the worker; it keeps /in.pdf in its FS for fix/extract.
       const a = await call('analyze', { bytes: buf }, [buf]);
       state.analysis = a;
+      // No extractable text means the pages are scans/images (or blank). Nothing
+      // to fix or extract — say so plainly instead of running an empty pass.
+      if (!a.has_text) return renderScannedNotice(a);
       renderConfig();
     } catch (err) { showError(err.message); }
   }
@@ -448,6 +451,31 @@ const App = (() => {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     });
     $('to-fix').addEventListener('click', () => { state.mode = 'fix'; process(); });
+    showView('result');
+  }
+
+  // ---- scanned / image PDF -------------------------------------------------
+  // We repair how Tibetan is *encoded*, not pictures of text. A PDF with no
+  // extractable text can only come back empty, so explain that up front rather
+  // than letting the user pick fix/extract and get nothing back.
+  function renderScannedNotice(a) {
+    const scanned = !!a.has_images;
+    const single = a.page_count === 1;
+    const pages = single ? 'single page' : `${a.page_count} pages`;
+    const title = scanned ? 'This looks like a scanned PDF' : 'No text found in this PDF';
+    const body = scanned
+      ? `Its ${pages} ${single ? 'is an image' : 'are images'}, so there's no text to fix or extract. This tool repairs how Tibetan text is <em>encoded</em> — it doesn't do OCR (turning pictures of text into characters).`
+      : `There's no extractable text on its ${pages}, so there's nothing to fix or extract.`;
+    $('view-result').innerHTML = `
+      <div class="panel swap-enter">
+        <div class="result-head">
+          <div class="badge-warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v6"/><path d="M12 17h.01"/></svg></div>
+          <div><h3>${title}</h3><p>${body}</p></div>
+        </div>
+        <div class="btn-actions">
+          <button class="btn btn-primary" onclick="App.reset()">Try another file</button>
+        </div>
+      </div>`;
     showView('result');
   }
 

@@ -42,12 +42,21 @@ async function analyze(bytes) {
 import json, pymupdf
 d = pymupdf.open("/in.pdf")
 fonts, seen = [], set()
+chars, has_images = 0, False
 for p in range(d.page_count):
+    page = d[p]
     for f in d.get_page_fonts(p):
         name = f[3]
         if name and name not in seen:
             seen.add(name); fonts.append(name)
-json.dumps({"page_count": d.page_count, "fonts": fonts})
+    # Cheap scan/image detection: count non-whitespace text (early-exit once we
+    # have any) and note whether the page carries raster images.
+    if chars < 16:
+        chars += len("".join(page.get_text().split()))
+    if not has_images and page.get_images():
+        has_images = True
+json.dumps({"page_count": d.page_count, "fonts": fonts,
+            "has_text": chars > 0, "has_images": has_images})
 `);
   return JSON.parse(json);
 }
