@@ -64,9 +64,24 @@ json.dumps({"page_count": d.page_count, "fonts": fonts,
 async function fix() {
   post('progress', { phase: 'working' });
   const stats = await py.runPythonAsync(`
-import json, pdf_cmap_fix
+import json, pdf_cmap_fix, pymupdf
 res = pdf_cmap_fix.patch_pdf("/in.pdf", output_path="/out.pdf", write_file=True)
-json.dumps(res.get("stats", {}), default=str)
+_stats = res.get("stats", {})
+# How much real Tibetan Unicode does the resulting file already yield? Lets the
+# UI tell "already fine" (valid Unicode, nothing to fix) apart from "unsupported
+# legacy fonts" — both produce patched == 0 but mean opposite things. Capped: we
+# only need to know whether there's a meaningful amount, not the exact count.
+_d = pymupdf.open("/out.pdf")
+_tib = 0
+for _p in range(_d.page_count):
+    for _c in _d[_p].get_text():
+        if '\\u0f00' <= _c <= '\\u0fff':
+            _tib += 1
+    if _tib >= 64:
+        break
+_d.close()
+_stats["tibetan_chars"] = _tib
+json.dumps(_stats, default=str)
 `);
   const out = py.FS.readFile('/out.pdf');
   py.FS.unlink('/out.pdf');
